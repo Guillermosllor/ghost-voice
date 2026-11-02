@@ -380,10 +380,29 @@ _kokoro_lock = threading.Lock()
 kokoro_blends = {}  # nombre -> [(voz, peso)], lo rellena la interfaz desde la configuración
 
 
+KOKORO_URL = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/"
+
+
+def _kokoro_fetch(name):
+    """Descarga el modelo la primera vez (~350 MB en total), a un .part para no dejar archivos a medias."""
+    path = KOKORO_DIR / name
+    if not path.exists():
+        import requests
+        KOKORO_DIR.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(path.suffix + ".part")
+        with requests.get(KOKORO_URL + name, stream=True, timeout=30) as r:
+            r.raise_for_status()
+            with open(tmp, "wb") as f:
+                for chunk in r.iter_content(1 << 20):
+                    f.write(chunk)
+        tmp.replace(path)
+    return str(path)
+
+
 def _kokoro_model():
     if "model" not in _kokoro:
         from kokoro_onnx import Kokoro
-        _kokoro["model"] = Kokoro(str(KOKORO_DIR / "kokoro-v1.0.onnx"), str(KOKORO_DIR / "voices-v1.0.bin"))
+        _kokoro["model"] = Kokoro(_kokoro_fetch("kokoro-v1.0.onnx"), _kokoro_fetch("voices-v1.0.bin"))
     return _kokoro["model"]
 
 
