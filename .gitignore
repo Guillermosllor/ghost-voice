@@ -1,0 +1,8 @@
+# Entornos de Python
+.venv/
+clonador/.venv/
+__pycache__/
+*.pyc
+
+# Datos del usuario: config, sonidos descargados, voces clonadas, modelos y registro
+datos/
